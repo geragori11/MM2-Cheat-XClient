@@ -1,50 +1,61 @@
 local Screen = {}
-local Util = shared.XClient.Util
 local Reg = shared.XClient.Reg
 
 function Screen.Init()
-    -- Удаляем старое меню если есть
     local old = game.CoreGui:FindFirstChild("XClient_UI")
     if old then old:Destroy() end
 
     local Gui = Instance.new("ScreenGui", game.CoreGui)
     Gui.Name = "XClient_UI"
+    Gui.DisplayOrder = 999 -- Поверх всего
 
     local Main = Instance.new("Frame", Gui)
-    Main.Size = UDim2.new(0, 500, 0, 350)
-    Main.Position = UDim2.new(0.5, -250, 0.5, -175)
-    Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Main.Size = UDim2.new(0, 200, 0, 300)
+    Main.Position = UDim2.new(0, 50, 0.5, -150) -- Слева по центру
+    Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Main.BorderSizePixel = 0
     Main.Active = true
-    Main.Draggable = true -- Можно двигать мышкой
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+    Main.Draggable = true 
 
-    local Content = Instance.new("Frame", Main)
-    Content.Size = UDim2.new(1, -20, 1, -20)
-    Content.Position = UDim2.new(0, 10, 0, 10)
-    Content.BackgroundTransparency = 1
+    local Title = Instance.new("TextLabel", Main)
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Title.Text = "X-CLIENT MM2"
+    Title.TextColor3 = Color3.new(1,1,1)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 14
 
-    local Layout = Instance.new("UIGridLayout", Content)
-    Layout.CellSize = UDim2.new(0, 110, 0, 40)
-    Layout.Padding = UDim2.new(0, 10, 0, 10)
+    local Scroll = Instance.new("ScrollingFrame", Main)
+    Scroll.Size = UDim2.new(1, -10, 1, -40)
+    Scroll.Position = UDim2.new(0, 5, 0, 35)
+    Scroll.BackgroundTransparency = 1
+    Scroll.CanvasSize = UDim2.new(0, 0, 0, 0) -- Авто-размер ниже
+    Scroll.ScrollBarThickness = 2
+
+    local Layout = Instance.new("UIListLayout", Scroll)
+    Layout.Padding = UDim.new(0, 5)
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- Автоматическое изменение размера скролла
+    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y)
+    end)
 
     for _, mod in pairs(Reg.Modules) do
-        local Btn = Instance.new("TextButton", Content)
-        Btn.Size = UDim2.new(0, 110, 0, 40)
-        Btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        local Btn = Instance.new("TextButton", Scroll)
+        Btn.Size = UDim2.new(1, 0, 0, 30)
+        Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Btn.BorderSizePixel = 0
         Btn.Text = mod.Name
-        Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Btn.Font = Enum.Font.GothamSemibold
+        Btn.TextColor3 = Color3.new(1,1,1)
+        Btn.Font = Enum.Font.Gotham
         Btn.TextSize = 14
-        Instance.new("UICorner", Btn)
+        Btn.AutoButtonColor = true
 
-        -- Функция клика
         Btn.MouseButton1Click:Connect(function()
-            local newState = mod:Toggle()
-            if newState then
-                Btn.BackgroundColor3 = Color3.fromRGB(60, 160, 80) -- Зеленый
-            else
-                Btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- Серый
-            end
+            local state = mod:Toggle()
+            Btn.BackgroundColor3 = state and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(50, 50, 50)
+            print("[X-Client] " .. mod.Name .. " is now " .. tostring(state))
         end)
     end
 end
