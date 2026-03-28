@@ -17,13 +17,7 @@ Reg.RegisterModule({
     end
 })
 
-Reg.RegisterModule({
-    Name = "Killaura",
-    Category = "Combat",
-    Description = "Бьет всех вокруг",
-    OnEnable = function() print("Aura ON") end,
-    OnDisable = function() print("Aura OFF") end
-})
+
 
 -- Запуск интерфейса
 Screen.Init()

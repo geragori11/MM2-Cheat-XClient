@@ -5,18 +5,14 @@ local Reg = {
 
 function Reg.RegisterModule(config)
     config.Enabled = false
+    config.Settings = config.Settings or {} -- Сюда пишем слайдеры и тд
     
-    -- Исправленная функция переключения
     function config:Toggle()
         self.Enabled = not self.Enabled
-        if self.Enabled then
-            -- Если OnEnable это функция, вызываем её
-            local s, e = pcall(self.OnEnable)
-            if not s then warn("OnEnable Error: " .. tostring(e)) end
-        else
-            local s, e = pcall(self.OnDisable)
-            if not s then warn("OnDisable Error: " .. tostring(e)) end
-        end
+        local s, e = pcall(function()
+            if self.Enabled then self:OnEnable() else self:OnDisable() end
+        end)
+        if not s then warn("Module Error: "..tostring(e)) end
         return self.Enabled
     end
 
