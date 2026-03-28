@@ -1,5 +1,6 @@
 local Screen = {}
 local Reg = shared.XClient.Reg
+local UIS = game:GetService("UserInputService")
 
 function Screen.CreateSetting(data, parent)
     local SettingBtn = Instance.new("TextButton", parent)
@@ -38,22 +39,33 @@ function Screen.Init()
     Gui.Name = "XClient_UI"
 
     local Main = Instance.new("Frame", Gui)
-    Main.Size = UDim2.new(0, 650, 0, 20)
+    Main.Size = UDim2.new(0, 650, 0, 40)
     Main.Position = UDim2.new(0.5, -325, 0.15, 0)
     Main.BackgroundTransparency = 1
-    Main.Active = true
-    Main.Draggable = true
+    Main.Visible = true
+
+    -- Скрытие меню на Ctrl или K
+    UIS.InputBegan:Connect(function(input, gpe)
+        if not gpe and (input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.K) then
+            Main.Visible = not Main.Visible
+        end
+    end)
 
     local Layout = Instance.new("UIListLayout", Main)
     Layout.FillDirection = Enum.FillDirection.Horizontal
     Layout.Padding = UDim.new(0, 10)
 
+    -- Проверка MM2
+    local isMM2 = (game.PlaceId == 142823291)
+
     for _, cat in pairs(Reg.Categories) do
-        -- Общий контейнер для всей категории (Заднее меню)
+        -- Если категория "MM2" и мы не в MM2 - скипаем
+        if cat == "MM2" and not isMM2 then continue end
+
         local FullCatFrame = Instance.new("Frame", Main)
         FullCatFrame.Size = UDim2.new(0, 140, 0, 300) 
-        FullCatFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10) -- Чернее
-        FullCatFrame.BackgroundTransparency = 0.15 -- Меньше прозрачности
+        FullCatFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+        FullCatFrame.BackgroundTransparency = 0.15
         Instance.new("UICorner", FullCatFrame)
 
         local Title = Instance.new("TextLabel", FullCatFrame)
@@ -61,62 +73,47 @@ function Screen.Init()
         Title.Text = cat:upper()
         Title.TextColor3 = Color3.fromRGB(255, 255, 255)
         Title.Font = Enum.Font.GothamBold
-        Title.TextSize = 14
         Title.BackgroundTransparency = 1
 
         local ModList = Instance.new("Frame", FullCatFrame)
         ModList.Size = UDim2.new(1, -10, 1, -45)
         ModList.Position = UDim2.new(0, 5, 0, 40)
         ModList.BackgroundTransparency = 1
-        
-        local MLayout = Instance.new("UIListLayout", ModList)
-        MLayout.Padding = UDim.new(0, 4)
+        Instance.new("UIListLayout", ModList).Padding = UDim.new(0, 4)
 
         for _, mod in pairs(Reg.Modules) do
             if mod.Category == cat then
                 local Btn = Instance.new("TextButton", ModList)
                 Btn.Size = UDim2.new(1, 0, 0, 30)
                 Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-                Btn.BackgroundTransparency = 0.4 -- Кнопки прозрачнее фона
                 Btn.Text = mod.Name
                 Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-                Btn.Font = Enum.Font.Gotham
                 Instance.new("UICorner", Btn)
 
-                -- ЛКМ: Вкл/Выкл
                 Btn.MouseButton1Click:Connect(function()
                     local state = mod:Toggle()
                     Btn.BackgroundColor3 = state and Color3.fromRGB(0, 180, 100) or Color3.fromRGB(30, 30, 30)
-                    Btn.BackgroundTransparency = state and 0.2 or 0.4
                 end)
 
-                -- ПКМ: Настройки сбоку
                 Btn.MouseButton2Click:Connect(function()
                     local sf = Btn:FindFirstChild("SettingsFrame")
-                    if sf then 
-                        sf.Visible = not sf.Visible 
-                    elseif mod.Settings and #mod.Settings > 0 then
+                    if sf then sf.Visible = not sf.Visible 
+                    elseif mod.Settings then
                         local SF = Instance.new("Frame", Btn)
                         SF.Name = "SettingsFrame"
                         SF.Size = UDim2.new(0, 130, 0, #mod.Settings * 35 + 10)
                         SF.Position = UDim2.new(1, 10, 0, 0)
                         SF.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-                        SF.BackgroundTransparency = 0.1
                         SF.ZIndex = 20
                         Instance.new("UICorner", SF)
-                        
-                        local SLayout = Instance.new("UIListLayout", SF)
-                        SLayout.Padding = UDim.new(0, 5)
-                        SLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-                        for _, sData in pairs(mod.Settings) do
-                            Screen.CreateSetting(sData, SF)
-                        end
+                        local SL = Instance.new("UIListLayout", SF)
+                        SL.Padding = UDim.new(0, 5)
+                        SL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+                        for _, sData in pairs(mod.Settings) do Screen.CreateSetting(sData, SF) end
                     end
                 end)
             end
         end
     end
 end
-
 return Screen
